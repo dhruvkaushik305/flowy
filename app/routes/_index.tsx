@@ -3,6 +3,7 @@ import { SocialIcon } from "react-social-icons";
 import boatImage from "/boat.png";
 import { Link } from "react-router";
 import { MoveRight } from "lucide-react";
+import getUserId from "~/.server/getUserId";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,6 +13,10 @@ export function meta({}: Route.MetaArgs) {
       content: "Track tasks, time efforts & ride the current of progress",
     },
   ];
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  await getUserId(request);
 }
 
 export default function RootPage() {
