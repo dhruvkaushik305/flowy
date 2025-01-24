@@ -1,6 +1,6 @@
 import type { Route } from "../+types/root";
 import { SocialIcon } from "react-social-icons";
-import boatImage from "/boat.png";
+import boatImage from "../assets/boat.png?url";
 import { Link } from "react-router";
 import { MoveRight } from "lucide-react";
 import getUserId from "~/.server/getUserId";

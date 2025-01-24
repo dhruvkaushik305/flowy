@@ -10,7 +10,7 @@ import {
 
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
-import notFoundImage from "/not-found.png";
+import notFoundImage from "./assets/not-found.png?url";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
