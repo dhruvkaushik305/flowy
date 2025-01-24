@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.input-box {
+  @apply p-2 rounded-md w-full border border-zinc-100 focus:outline-none focus:border-zinc-400;
+}
+
+.form-error{
+    @apply text-sm text-red-500;
+}

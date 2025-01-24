@@ -9,7 +9,7 @@ export async function getUserId(userName: string) {
     db
       .select({ userId: schema.User.id })
       .from(schema.User)
-      .where(eq(schema.User.userName, userName))
+      .where(eq(schema.User.userName, userName)),
   );
 
   return queryUserId?.[0]?.userId ?? null;
@@ -30,7 +30,7 @@ export async function createNewUser(body: {
         userName: body.userName,
         password: hashedPassword,
       })
-      .returning({ userId: schema.User.id })
+      .returning({ userId: schema.User.id }),
   );
 
   return queryCreateNewUser?.[0]?.userId ?? null;

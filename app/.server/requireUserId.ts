@@ -1,13 +1,13 @@
 import { getSession } from "./sessions";
 
-export default async function getUserId(request: Request) {
+export default async function requireUserId(request: Request) {
   const session = await getSession(request.headers.get("Cookie"));
 
   if (session.has("userId")) {
-    //check if this is a matching userId or not
-    console.log(session);
+    console.log(`User ${session.get("userId")} logged in`);
+    return true;
   } else {
     console.log("User is not signed in");
-    return null;
+    return false;
   }
 }

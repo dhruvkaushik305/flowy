@@ -3,7 +3,7 @@ import { SocialIcon } from "react-social-icons";
 import boatImage from "../assets/boat.png?url";
 import { Link } from "react-router";
 import { MoveRight } from "lucide-react";
-import getUserId from "~/.server/getUserId";
+import requireUserId from "~/.server/requireUserId";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -16,7 +16,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await getUserId(request);
+  await requireUserId(request);
 }
 
 export default function RootPage() {
