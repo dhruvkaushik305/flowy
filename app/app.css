@@ -3,9 +3,17 @@
 @tailwind utilities;
 
 .input-box {
-  @apply p-2 rounded-md w-full border border-zinc-100 focus:outline-none focus:border-zinc-400;
+  @apply w-full rounded-md border border-zinc-100 p-2 focus:border-zinc-400 focus:outline-none;
 }
 
-.form-error{
-    @apply text-sm text-red-500;
+.form-error {
+  @apply text-sm text-red-500;
+}
+
+.navlink-active {
+  @apply flex items-center gap-1 rounded-xl border-2 border-blue-300 bg-blue-100 px-3 py-2 font-roboto font-medium;
+}
+
+.navlink-inactive {
+  @apply flex items-center gap-1 rounded-xl border-2 border-blue-100 px-3 py-2 font-roboto font-medium;
 }
