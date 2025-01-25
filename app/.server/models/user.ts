@@ -12,7 +12,15 @@ export async function getUserId(userName: string) {
       .where(eq(schema.User.userName, userName)),
   );
 
-  return queryUserId?.[0]?.userId ?? null;
+  if (queryUserId === null) {
+    return undefined; //signifies db issue
+  }
+
+  if (queryUserId.length === 0) {
+    return null;
+  }
+
+  return queryUserId[0].userId;
 }
 
 export async function createNewUser(body: {
@@ -33,5 +41,25 @@ export async function createNewUser(body: {
       .returning({ userId: schema.User.id }),
   );
 
-  return queryCreateNewUser?.[0]?.userId ?? null;
+  return queryCreateNewUser?.[0]?.userId ?? undefined;
+}
+
+export async function comparePasswords(userId: string, hashedPassword: string) {
+  const queryUserPassword = await safeCall(
+    db
+      .select({ password: schema.User.password })
+      .from(schema.User)
+      .where(eq(schema.User.id, userId)),
+  );
+
+  if (!queryUserPassword || queryUserPassword.length === 0) {
+    return undefined;
+  }
+
+  const passwordsMatched = await bcrypt.compare(
+    hashedPassword,
+    queryUserPassword[0].password,
+  );
+
+  return passwordsMatched;
 }

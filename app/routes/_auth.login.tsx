@@ -1,19 +1,12 @@
-import {
-  data,
-  Form,
-  Link,
-  redirect,
-  useActionData,
-  useNavigation,
-} from "react-router";
-import type { Route } from "./+types/_auth.signup";
-import { signupSchema } from "~/utils/zodSchema";
-import { formatAuthError } from "~/utils/formatAuthError";
-import { createNewUser, getUserId } from "~/.server/models/user";
-import { commitSession, getSession } from "~/.server/sessions";
-import highFiveImage from "../assets/high-five.png?url";
 import { useEffect, useRef } from "react";
+import type { Route } from "./+types/_auth.login";
+import { data, Form, Link, redirect, useNavigation } from "react-router";
+import welcomeImage from "../assets/welcome.png?url";
 import { Ellipsis } from "lucide-react";
+import { commitSession, getSession } from "~/.server/sessions";
+import { loginSchema } from "~/utils/zodSchema";
+import { formatAuthError } from "~/utils/formatAuthError";
+import { comparePasswords, getUserId } from "~/.server/models/user";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -35,12 +28,11 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const body = {
-    name: String(formData.get("name")),
     userName: String(formData.get("userName")),
     password: String(formData.get("password")),
   };
 
-  const validateInput = signupSchema.safeParse(body);
+  const validateInput = loginSchema.safeParse(body);
 
   if (!validateInput.success) {
     const issues = formatAuthError(validateInput.error.message);
@@ -60,21 +52,31 @@ export async function action({ request }: Route.ActionArgs) {
     });
   }
 
-  if (userId) {
-    session.flash("error", "An account with this user name already exists");
+  if (userId === null) {
+    session.flash("error", "Username/Password is incorrect");
 
-    return redirect("/signup", {
+    return redirect("/login", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
     });
   } else {
-    const userId = await createNewUser(body);
+    const validPassword = await comparePasswords(userId, body.password);
 
-    if (userId === undefined) {
+    if (validPassword === undefined) {
       session.flash("error", "Oops, Something went wrong :(");
 
-      return redirect("/signup", {
+      return redirect("/login", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    if (validPassword === false) {
+      session.flash("error", "Username/Password is incorrect");
+
+      return redirect("/login", {
         headers: {
           "Set-Cookie": await commitSession(session),
         },
@@ -91,7 +93,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function SignupPage({
+export default function LoginPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
@@ -120,11 +122,11 @@ export default function SignupPage({
   return (
     <section className="flex w-full items-center justify-center gap-16 px-4 py-4 md:px-8">
       <figure className="hidden h-auto max-w-md grow lg:block">
-        <img src={highFiveImage} className="w-full" />
+        <img src={welcomeImage} className="w-full" />
       </figure>
       <div className="flex grow flex-col items-center gap-5">
         <header>
-          <span className="text-xl font-medium md:text-2xl">Signup to</span>{" "}
+          <span className="text-xl font-medium md:text-2xl">Login to</span>{" "}
           <Link to="/" className="font-pacifico text-2xl md:text-3xl">
             Flowy
           </Link>
@@ -158,15 +160,15 @@ export default function SignupPage({
             {navigation.state !== "idle" ? (
               <Ellipsis className="mx-auto" />
             ) : (
-              "Signup"
+              "Login"
             )}
           </button>
           {error && <p className="form-error text-center">{error}</p>}
         </Form>
         <p className="text-sm">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-500 hover:underline">
-            Login
+          Create an account?{" "}
+          <Link to="/signup" className="text-blue-500 hover:underline">
+            Register
           </Link>
         </p>
       </div>
@@ -175,13 +177,6 @@ export default function SignupPage({
 }
 
 const formFields = [
-  {
-    id: 1,
-    inputType: "text",
-    inputName: "name",
-    inputLabel: "Name",
-    inputPlaceholder: "John Doe",
-  },
   {
     id: 2,
     inputType: "text",
