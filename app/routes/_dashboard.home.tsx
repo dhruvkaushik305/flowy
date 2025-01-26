@@ -3,9 +3,15 @@ import type { Route } from "./+types/_dashboard.home";
 import { getName } from "~/.server/models/user";
 import { getTodos } from "~/.server/models/todo";
 import { getTodayTime } from "~/.server/models/time";
-import { data, useFetcher, useLoaderData } from "react-router";
+import {
+  data,
+  useBeforeUnload,
+  useBlocker,
+  useFetcher,
+  useLoaderData,
+} from "react-router";
 import invariant from "tiny-invariant";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   CheckCheck,
   Clock,
@@ -19,6 +25,8 @@ import {
   RotateCcw,
   Trash,
 } from "lucide-react";
+import checkImage from "../assets/check.png?url";
+import uncheckImage from "../assets/uncheck.png?url";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -69,6 +77,8 @@ function Stopwatch() {
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const currentDayRef = useRef(new Date().getDate());
+
   const hour = Math.floor(time / 3600)
     .toString()
     .padStart(2, "0");
@@ -77,6 +87,7 @@ function Stopwatch() {
     .padStart(2, "0");
   const second = (time % 60).toString().padStart(2, "0");
 
+  //side effect that controls the doc title thing
   useEffect(() => {
     if (!isRunning) {
       document.title = "Flowy - Clock in, Check off";
@@ -85,8 +96,68 @@ function Stopwatch() {
     }
   });
 
-  const handlePause = () => {
+  const timeFetcher = useFetcher();
+
+  const saveTime = async () => {
+    //if the time hasn't changed yet, there's not point in saving anything
+    if (time === currentTime) return;
     setIsRunning(false);
+
+    const formData = new FormData();
+    formData.set("intent", "updateTime");
+    formData.set("currentTime", String(time));
+
+    await timeFetcher.submit(formData, { method: "POST" });
+  };
+
+  //used to save time while the browser is being closed
+  useBeforeUnload(saveTime);
+
+  //this is used to block the navigation until the time is saved first.
+  //the window.before unload event is capable of firing when we navigate
+  //however when we normally navigate, we use JS to prevent page reloads,
+  //in that scenario it won't fire so this is explicitly for that
+  const saveTimeBlocker = useBlocker(true);
+  useEffect(() => {
+    if (saveTimeBlocker.state === "blocked") {
+      saveTime().then(() => {
+        if (saveTimeBlocker.proceed) {
+          saveTimeBlocker.proceed();
+        }
+      });
+    }
+  }, [saveTimeBlocker.state]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isRunning) {
+      interval = setInterval(() => {
+        const day = new Date().getDate();
+        //when its past midnight; save, reset, start again
+        if (day != currentDayRef.current) {
+          saveTime().then(() => {
+            setTime(0);
+            currentDayRef.current = day;
+            setIsRunning(true);
+          });
+        } else {
+          setTime((prevTime) => prevTime + 1);
+        }
+      }, 1000);
+    } else if (interval) {
+      clearInterval(interval);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRunning, time]);
+
+  const handlePause = async () => {
+    await saveTime();
   };
 
   const handlePlay = () => {
@@ -98,8 +169,10 @@ function Stopwatch() {
   };
 
   const handleReset = () => {
-    setIsRunning(false);
     setTime(0);
+    const formData = new FormData();
+    formData.set("intent", "resetTimer");
+    timeFetcher.submit(formData, { method: "POST" });
   };
 
   return (
@@ -155,14 +228,20 @@ function AddTodo() {
   const inputRef = useRef<HTMLInputElement>(null);
   const createFetcher = useFetcher();
 
-  const handleSubmition = () => {};
+  const handleSubmition = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    await createFetcher.submit(formData, { method: "POST" });
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
 
   return (
-    <createFetcher.Form
-      method="POST"
-      onSubmit={handleSubmition}
-      className="flex gap-2"
-    >
+    <createFetcher.Form onSubmit={handleSubmition} className="flex gap-2">
       <input
         type="text"
         name="newTodo"
@@ -247,28 +326,43 @@ function TodoItem({ todo }: Readonly<TodoItemProps>) {
   const updateFetcher = useFetcher();
   const deleteFetcher = useFetcher();
 
-  const handleToggleTodo = () => {};
   const todoChecked = toggleFetcher.formData
     ? toggleFetcher.formData.get("completed") === "true"
     : todo.completed;
 
-  const handleUpdateTodo = () => {};
-  const handleDeleteTodo = () => {};
   const optimisticDeletion =
     deleteFetcher.formData?.get("intent") === "deleteTodo";
+
+  const handleUpdateTodo = async (event: React.FocusEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    formData.set("todoId", todo.id);
+    formData.set("intent", "updateTodo");
+
+    await updateFetcher.submit(formData, { method: "POST" });
+  };
 
   return (
     <>
       {!optimisticDeletion && (
         <div className="flex w-full items-center gap-5">
-          <toggleFetcher.Form>
-            <input
-              type="checkbox"
-              checked={todoChecked}
+          <toggleFetcher.Form method="POST">
+            <button
+              type="submit"
               name="completed"
-              onChange={handleToggleTodo}
-              className="size-4"
-            />
+              value={String(!todoChecked)}
+              className="h-auto w-6"
+            >
+              {todoChecked ? (
+                <img src={checkImage} className="w-full" />
+              ) : (
+                <img src={uncheckImage} className="w-full" />
+              )}
+            </button>
+            <input name="todoId" value={todo.id} hidden readOnly />
+            <input name="intent" value="toggleTodo" hidden readOnly />
           </toggleFetcher.Form>
           <updateFetcher.Form onBlur={handleUpdateTodo} className="w-full">
             <input
@@ -279,9 +373,10 @@ function TodoItem({ todo }: Readonly<TodoItemProps>) {
               } w-full bg-transparent hover:cursor-text focus:outline-none`}
             />
           </updateFetcher.Form>
-          <deleteFetcher.Form onSubmit={handleDeleteTodo}>
-            <button type="submit">
+          <deleteFetcher.Form method="POST">
+            <button type="submit" name="intent" value="deleteTodo">
               <Trash className="size-3 transition-transform duration-200 hover:scale-125 md:size-4" />
+              <input name="todoId" value={todo.id} hidden readOnly />
             </button>
           </deleteFetcher.Form>
         </div>
