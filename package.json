@@ -5,7 +5,10 @@
   "scripts": {
     "build": "react-router build && node vercel/prepare.js",
     "dev": "cross-env NODE_ENV=development node ./dev-server.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "db:seed": "tsx drizzle/seed.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@react-router/express": "^7.1.3",
