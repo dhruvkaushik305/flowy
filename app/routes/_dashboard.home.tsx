@@ -1,8 +1,14 @@
 import { getSession } from "~/.server/sessions";
 import type { Route } from "./+types/_dashboard.home";
 import { getName } from "~/.server/models/user";
-import { getTodos } from "~/.server/models/todo";
-import { getTodayTime } from "~/.server/models/time";
+import {
+  createTodo,
+  deleteTodo,
+  getTodos,
+  toggleTodo,
+  updateTodo,
+} from "~/.server/models/todo";
+import { getTodayTime, resetTimer, updateTime } from "~/.server/models/time";
 import {
   data,
   useBeforeUnload,
@@ -32,7 +38,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const userId = session.get("userId");
 
-  invariant(userId, "User id was not resolved at home");
+  invariant(userId, "User id was not resolved at home loader");
 
   const [name, todos, currentTime] = await Promise.all([
     getName(userId),
@@ -45,6 +51,69 @@ export async function loader({ request }: Route.LoaderArgs) {
     todos,
     currentTime,
   });
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+  invariant(userId, "User id was not resolved at the home action");
+
+  const formData = await request.formData();
+
+  const intent = formData.get("intent");
+  switch (intent) {
+    case "createTodo": {
+      const newTodo = formData.get("newTodo");
+
+      if (!newTodo) return;
+
+      await createTodo(userId, newTodo as string);
+      break;
+    }
+    case "toggleTodo": {
+      const todoId = formData.get("todoId");
+
+      if (!todoId) return;
+
+      const newState = formData.get("completed") === "true";
+      await toggleTodo(todoId as string, newState);
+      break;
+    }
+    case "updateTodo": {
+      const todoId = formData.get("todoId");
+      const newTitle = formData.get("newTitle");
+
+      if (!todoId || !newTitle) return;
+
+      await updateTodo(todoId as string, newTitle as string);
+    }
+    case "deleteTodo": {
+      const todoId = formData.get("todoId");
+
+      if (!todoId) return;
+      await deleteTodo(todoId as string);
+      break;
+    }
+    case "updateTime": {
+      const newTimeEntry = formData.get("currentTime");
+
+      if (!newTimeEntry) return;
+
+      const newTime = parseInt(String(newTimeEntry), 10);
+      if (isNaN(newTime)) return; //checks that the time is a valid number
+
+      await updateTime(userId, newTime);
+      break;
+    }
+    case "resetTimer": {
+      await resetTimer(userId);
+      break;
+    }
+    default: {
+      console.log("Unhandled request", intent);
+      break;
+    }
+  }
 }
 
 export default function HomePage() {
@@ -232,6 +301,7 @@ function AddTodo() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    formData.set("intent", "createTodo");
 
     await createFetcher.submit(formData, { method: "POST" });
 
@@ -250,8 +320,6 @@ function AddTodo() {
         className="w-full rounded-md border border-blue-100 bg-transparent p-2 focus:border-blue-300 focus:outline-none"
       />
       <button
-        name="intent"
-        value="createTodo"
         disabled={createFetcher.state !== "idle"}
         className="rounded-xl bg-black p-3 text-white transition-transform duration-200 hover:scale-105"
       >
