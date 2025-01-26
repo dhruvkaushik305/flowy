@@ -63,3 +63,14 @@ export async function comparePasswords(userId: string, hashedPassword: string) {
 
   return passwordsMatched;
 }
+
+export async function getName(userId: string) {
+  const queryName = await safeCall(
+    db
+      .select({ name: schema.User.name })
+      .from(schema.User)
+      .where(eq(schema.User.id, userId)),
+  );
+
+  return queryName?.[0]?.name ?? null;
+}

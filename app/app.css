@@ -17,3 +17,7 @@
 .navlink-inactive {
   @apply flex items-center gap-1 rounded-xl border-2 border-blue-100 px-3 py-2 font-roboto font-medium;
 }
+
+.stopwatch-btn {
+  @apply rounded-md border border-blue-100 bg-blue-100 p-2 transition-colors duration-200 hover:bg-blue-200 md:p-3;
+}
