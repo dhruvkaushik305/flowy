@@ -1,11 +1,12 @@
 import { getSession } from "~/.server/sessions";
 import type { Route } from "./+types/_dashboard.explore";
 import invariant from "tiny-invariant";
-import { getFollowingData, searchUsers } from "~/.server/models/user";
+import { searchUsers } from "~/.server/models/user";
 import { data, Link, useFetcher, useLoaderData } from "react-router";
 import { useEffect, useState } from "react";
 import debouncer from "~/utils/debouncer";
 import { Clock } from "lucide-react";
+import { getFollowingData } from "~/.server/models/follow";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));

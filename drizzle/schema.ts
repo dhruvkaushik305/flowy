@@ -13,7 +13,7 @@ export const User = pgTable("flowy_users", {
   name: text("name").notNull(),
   userName: text("user_name").unique().notNull(),
   password: text("password").notNull(),
-  joinedAt: timestamp("joined_at").defaultNow(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
 export const Todo = pgTable("flowy_todo", {
@@ -29,7 +29,7 @@ export const Todo = pgTable("flowy_todo", {
 export const Time = pgTable("flowy_time", {
   id: uuid("id").defaultRandom().primaryKey(),
   timeStudied: integer("time_studied").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: uuid("user_id")
     .references(() => User.id)
     .notNull(),

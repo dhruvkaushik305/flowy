@@ -92,48 +92,30 @@ export async function searchUsers(initials: string | null) {
   return querySearchUser ?? [];
 }
 
-export async function getFollowingData(userId: string) {
-  const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
-  const endOfDay = new Date(new Date().setHours(23, 59, 59, 999));
-
-  const queryFollowingData = await safeCall(
+export async function getUserDetails(userId: string) {
+  const queryUserDetails = await safeCall(
     db
       .select({
-        id: schema.User.id,
         name: schema.User.name,
         userName: schema.User.userName,
-        timeStudied: sql<number>`COALESCE(${schema.Time.timeStudied},0)`,
-        totalTodos: count(schema.Todo.id),
-        completedTodos: count(
-          sql`CASE WHEN ${schema.Todo.completed} = true THEN 1 END`,
-        ),
+        joinedAt: schema.User.joinedAt,
       })
-      .from(schema.Follow)
-      .innerJoin(schema.User, eq(schema.Follow.followingId, schema.User.id))
-      .leftJoin(
-        schema.Todo,
-        and(
-          eq(schema.Todo.userId, schema.Follow.followingId),
-          gte(schema.Todo.createdAt, startOfDay),
-          lt(schema.Todo.createdAt, endOfDay),
-        ),
-      )
-      .leftJoin(
-        schema.Time,
-        and(
-          eq(schema.Follow.followingId, schema.Time.userId),
-          gte(schema.Time.createdAt, startOfDay),
-          lt(schema.Time.createdAt, endOfDay),
-        ),
-      )
-      .where(eq(schema.Follow.followerId, userId))
-      .groupBy(
-        schema.User.id,
-        schema.User.name,
-        schema.User.userName,
-        schema.Time.timeStudied,
-      ),
+      .from(schema.User)
+      .where(eq(schema.User.id, userId)),
   );
 
-  return queryFollowingData ?? [];
+  if (!queryUserDetails || queryUserDetails.length === 0)
+    return {
+      name: "",
+      userName: "",
+      joinedAt: "",
+    };
+
+  //make the date a lil more presentable yk
+  const userDetails = {
+    ...queryUserDetails[0],
+    joinedAt: queryUserDetails[0].joinedAt.toISOString().split("T")[0],
+  };
+
+  return userDetails;
 }
