@@ -20,7 +20,7 @@ export const Todo = pgTable("flowy_todo", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull(),
   completed: boolean("completed").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   userId: uuid("user_id")
     .references(() => User.id)
     .notNull(),

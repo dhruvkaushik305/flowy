@@ -40,17 +40,32 @@ async function main() {
 
     await db.insert(schema.Todo).values([
       {
-        title: "Todo 1",
+        title: "Todo 1.0",
         completed: false,
         userId: querySeedUser[0].id,
       },
       {
-        title: "Todo 2",
+        title: "Todo 1.1",
+        completed: false,
+        userId: querySeedUser[0].id,
+      },
+      {
+        title: "Todo 2.0",
         completed: false,
         userId: querySeedUser[1].id,
       },
       {
-        title: "Todo 3",
+        title: "Todo 2.1",
+        completed: false,
+        userId: querySeedUser[1].id,
+      },
+      {
+        title: "Todo 3.0",
+        completed: false,
+        userId: querySeedUser[2].id,
+      },
+      {
+        title: "Todo 3.1",
         completed: false,
         userId: querySeedUser[2].id,
       },
