@@ -2,7 +2,7 @@ import db from "drizzle/db";
 import safeCall from "../safeCall";
 import bcrypt from "bcryptjs";
 import * as schema from "drizzle/schema";
-import { eq } from "drizzle-orm";
+import { and, count, eq, gte, like, lt, sql } from "drizzle-orm";
 
 export async function getUserId(userName: string) {
   const queryUserId = await safeCall(
@@ -73,4 +73,61 @@ export async function getName(userId: string) {
   );
 
   return queryName?.[0]?.name ?? null;
+}
+
+export async function searchUsers(initials: string | null) {
+  if (!initials) return [];
+
+  const querySearchUser = await safeCall(
+    db
+      .select({
+        id: schema.User.id,
+        name: schema.User.name,
+        userName: schema.User.userName,
+      })
+      .from(schema.User)
+      .where(like(schema.User.name, `${initials}%`)),
+  );
+
+  return querySearchUser ?? [];
+}
+
+export async function getFollowingData(userId: string) {
+  const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+  const endOfDay = new Date(new Date().setHours(23, 59, 59, 999));
+
+  const queryFollowingData = await safeCall(
+    db
+      .select({
+        name: schema.User.name,
+        userName: schema.User.userName,
+        timeStudied: sql<number>`COALESCE(${schema.Time.timeStudied},0)`,
+        totalTodos: count(schema.Todo.id),
+        completedTodos: count(
+          sql`CASE WHEN ${schema.Todo.completed} = true THEN 1 END`,
+        ),
+      })
+      .from(schema.Follow)
+      .innerJoin(schema.User, eq(schema.Follow.followingId, schema.User.id))
+      .leftJoin(
+        schema.Todo,
+        and(
+          eq(schema.Todo.userId, schema.Follow.followingId),
+          gte(schema.Todo.createdAt, startOfDay),
+          lt(schema.Todo.createdAt, endOfDay),
+        ),
+      )
+      .leftJoin(
+        schema.Time,
+        and(
+          eq(schema.Follow.followingId, schema.Time.userId),
+          gte(schema.Time.createdAt, startOfDay),
+          lt(schema.Time.createdAt, endOfDay),
+        ),
+      )
+      .where(eq(schema.Follow.followerId, userId))
+      .groupBy(schema.User.name, schema.User.userName, schema.Time.timeStudied),
+  );
+  console.log("query says", queryFollowingData);
+  return queryFollowingData ?? [];
 }
