@@ -86,7 +86,7 @@ export async function searchUsers(initials: string | null) {
         userName: schema.User.userName,
       })
       .from(schema.User)
-      .where(like(schema.User.name, `${initials}%`)),
+      .where(like(schema.User.userName, `${initials}%`)),
   );
 
   return querySearchUser ?? [];
@@ -99,6 +99,7 @@ export async function getFollowingData(userId: string) {
   const queryFollowingData = await safeCall(
     db
       .select({
+        id: schema.User.id,
         name: schema.User.name,
         userName: schema.User.userName,
         timeStudied: sql<number>`COALESCE(${schema.Time.timeStudied},0)`,
@@ -126,8 +127,13 @@ export async function getFollowingData(userId: string) {
         ),
       )
       .where(eq(schema.Follow.followerId, userId))
-      .groupBy(schema.User.name, schema.User.userName, schema.Time.timeStudied),
+      .groupBy(
+        schema.User.id,
+        schema.User.name,
+        schema.User.userName,
+        schema.Time.timeStudied,
+      ),
   );
-  console.log("query says", queryFollowingData);
+
   return queryFollowingData ?? [];
 }
