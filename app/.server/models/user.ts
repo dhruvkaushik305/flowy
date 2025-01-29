@@ -119,3 +119,14 @@ export async function getUserDetails(userId: string) {
 
   return userDetails;
 }
+
+export async function verifyUserId(userId: string) {
+  const queryVerifyUser = await safeCall(
+    db
+      .select({ id: schema.User.id })
+      .from(schema.User)
+      .where(eq(schema.User.id, userId)),
+  );
+
+  return queryVerifyUser !== null && queryVerifyUser.length > 0;
+}

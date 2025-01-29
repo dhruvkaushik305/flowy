@@ -69,7 +69,8 @@ export async function getTodoActivity(userId: string) {
           gte(schema.Todo.createdAt, startOfMonth),
           lt(schema.Todo.createdAt, today),
         ),
-      ),
+      )
+      .groupBy(schema.Todo.createdAt),
   );
 
   if (!queryTodoActivity) return [];
@@ -104,6 +105,5 @@ export async function getTodoActivity(userId: string) {
       level,
     };
   });
-  console.log("todo activity", todoActivity);
   return todoActivity;
 }

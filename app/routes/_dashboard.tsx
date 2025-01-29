@@ -26,7 +26,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function DashboardOutlet() {
   return (
-    <main className="flex h-screen flex-col bg-blue-50">
+    <main className="flex h-full min-h-screen flex-col bg-blue-50">
       <Navbar />
       <div className="grow">
         <Outlet />

@@ -1,8 +1,8 @@
 import { data, Link } from "react-router";
 import invariant from "tiny-invariant";
-import { getFollowersList } from "~/.server/models/user";
 import { getSession } from "~/.server/sessions";
 import type { Route } from "./+types/_dashboard.profile.followers";
+import { getFollowersList } from "~/.server/models/follow";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -20,12 +20,12 @@ export default function FollowersPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <section>
-      <section className="mx-auto max-w-md space-y-8 p-2">
-        <header className="text-2xl font-bold md:text-3xl">Followers</header>
+      <section className="mx-auto max-w-md space-y-4 py-5">
+        <header className="text-3xl font-bold md:text-3xl">Followers</header>
         <div className="space-y-5">
           {followersList.map((followersItem) => (
             <FollowersItem
-              key={followersItem.userId}
+              key={followersItem.id}
               followersData={followersItem}
             />
           ))}
@@ -37,7 +37,7 @@ export default function FollowersPage({ loaderData }: Route.ComponentProps) {
 
 interface FollowersData {
   followersData: {
-    userId: string;
+    id: string;
     name: string;
     userName: string;
   };
@@ -45,9 +45,8 @@ interface FollowersData {
 
 function FollowersItem({ followersData }: Readonly<FollowersData>) {
   return (
-    <Link to={`/profile/${followersData.userId}`}>
-      <div className="flex items-center gap-5 rounded-lg border-2 border-indigo-200 p-2 md:border-4 md:p-4">
-        <div className="avatar">{followersData.name[0]}</div>
+    <Link to={`/profile/${followersData.id}`}>
+      <div className="flex items-center gap-5 rounded-lg border-2 border-blue-200 p-2 font-roboto md:border-4 md:p-4">
         <div className="leading-3">
           <p className="text-lg font-medium">{followersData.name}</p>
           <p>@{followersData.userName}</p>
