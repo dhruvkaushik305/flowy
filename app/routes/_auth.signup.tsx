@@ -119,8 +119,12 @@ export default function SignupPage({
 
   return (
     <section className="flex w-full items-center justify-center gap-16 px-4 py-4 md:px-8">
-      <figure className="hidden h-auto max-w-md grow lg:block">
-        <img src={highFiveImage} className="w-full" />
+      <figure className="hidden lg:block">
+        <img
+          src={highFiveImage}
+          className="h-auto w-[23rem] xl:h-auto xl:w-[25rem]"
+          alt="register_image"
+        />
       </figure>
       <div className="flex grow flex-col items-center gap-5">
         <header>

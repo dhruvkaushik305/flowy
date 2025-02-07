@@ -121,8 +121,12 @@ export default function LoginPage({
 
   return (
     <section className="flex w-full items-center justify-center gap-16 px-4 py-4 md:px-8">
-      <figure className="hidden h-auto max-w-md grow lg:block">
-        <img src={welcomeImage} className="w-full" />
+      <figure className="hidden lg:block">
+        <img
+          src={welcomeImage}
+          className="h-auto w-[23rem] xl:h-auto xl:w-[25rem]"
+          alt="login_image"
+        />
       </figure>
       <div className="flex grow flex-col items-center gap-5">
         <header>

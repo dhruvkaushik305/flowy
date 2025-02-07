@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="overflow-hidden">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -65,11 +65,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <main className="container mx-auto p-4 pt-16">
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full overflow-x-auto p-4">
           <code>{stack}</code>
         </pre>
       )}
@@ -79,7 +79,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 function PageNotFound() {
   return (
-    <main className="h-screen w-screen flex flex-col justify-center items-center">
+    <main className="flex h-screen w-screen flex-col items-center justify-center">
       <figure className="h-auto max-w-md">
         <img src={notFoundImage} className="w-full" />
       </figure>
