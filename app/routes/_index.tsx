@@ -1,8 +1,8 @@
 import type { Route } from "../+types/root";
 import { SocialIcon } from "react-social-icons";
 import boatImage from "../assets/boat.png?url";
-import { data, Link, useLoaderData } from "react-router";
-import { House, MoveRight } from "lucide-react";
+import { data, Link, useLoaderData, useNavigation } from "react-router";
+import { Ellipsis, House, MoveRight } from "lucide-react";
 import requireUserId from "~/.server/requireUserId";
 
 export function meta({}: Route.MetaArgs) {
@@ -44,6 +44,7 @@ function Header() {
 
 function Hero() {
   const { validUser } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
 
   return (
     <>
@@ -64,18 +65,26 @@ function Hero() {
             {validUser ? (
               <>
                 Go to Home{" "}
-                <House
-                  size={20}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
+                {navigation.state !== "idle" ? (
+                  <Ellipsis size={20} />
+                ) : (
+                  <House
+                    size={20}
+                    className="transition-transform duration-300 group-hover:scale-110"
+                  />
+                )}
               </>
             ) : (
               <>
                 Get Started{" "}
-                <MoveRight
-                  size={20}
-                  className="transition-transform duration-500 group-hover:translate-x-1"
-                />
+                {navigation.state !== "idle" ? (
+                  <Ellipsis size={20} />
+                ) : (
+                  <MoveRight
+                    size={20}
+                    className="transition-transform duration-500 group-hover:translate-x-1"
+                  />
+                )}
               </>
             )}
           </Link>
